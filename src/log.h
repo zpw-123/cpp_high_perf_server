@@ -2,6 +2,7 @@
 #define __src_log_h__
 
 #include "singleton.h"
+#include "util.h"
 #include <bits/types/time_t.h>
 #include <cstdint>
 #include <string>
@@ -33,6 +34,9 @@
 #define CHPE_LOG_FMT_WARN(logger, fmt, ...) CHPE_LOG_FMT_LEVEL(logger, cpp_high_perf::LogLevel::WARN, fmt, __VA_ARGS__)
 #define CHPE_LOG_FMT_ERROR(logger, fmt, ...) CHPE_LOG_FMT_LEVEL(logger, cpp_high_perf::LogLevel::ERROR, fmt, __VA_ARGS__)
 #define CHPE_LOG_FMT_FATAL(logger, fmt, ...) CHPE_LOG_FMT_LEVEL(logger, cpp_high_perf::LogLevel::FATAL, fmt, __VA_ARGS__)
+
+//读取loggermanager里面的默认logger
+#define CHPE_LOG_ROOT() cpp_high_perf::LoggerMgr::GetInstance()->getRoot()
 
 namespace cpp_high_perf {//命名空间设置为cpp_high_perf，避免命名冲突
 //shared_ptr是智能指针，可以自动释放内存，不需要手动释放，就像悬崖上面的安全绳，一个对象有很多根，最后一根没了对象就没了

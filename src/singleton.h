@@ -18,7 +18,7 @@ template <class T, class X = void, int N = 0>
 class SingletonPtr {
 public:
     static std::shared_ptr<T> GetInstance() {
-        static std::shared_ptr<T> v(new T);
+        static std::shared_ptr<T> v(new T);//执行时候，只是第一次创建，其余就直接返回
         return v;
     }
 };
