@@ -46,7 +46,7 @@ public:
     }
 };
 
-//偏特化
+//偏特化//
 template <class T>
 class LexicalCast<std::string, std::vector<T>> {
 public:
