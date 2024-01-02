@@ -22,7 +22,7 @@ static void listAllMember(const std::string& prefix, const YAML::Node& node,
         //std::list<std::pair<std::string, const YAML::Node>>& output 就是输出的结果
         //我的理解yaml文件，读取其实就应该是一行行的读取的
         
-        CHPE_LOG_ERROR(CHPE_LOG_ROOT()) << "listAllMember prefix=" << prefix << " node_type=" << node.Type();
+        //CHPE_LOG_ERROR(CHPE_LOG_ROOT()) << "listAllMember prefix=" << prefix << " node_type=" << node.Type();
         //检索一下非法字符
         if (prefix.find_first_not_of("abcdefghijklmnopqrstuvwxyz._0123456789") != std::string::npos) {
             CHPE_LOG_ERROR(CHPE_LOG_ROOT()) << "Config invalid name: " << prefix << " : " << node;
