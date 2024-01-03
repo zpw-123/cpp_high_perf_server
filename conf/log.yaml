@@ -29,3 +29,18 @@ system:
         k: 30
         k2: 20
         k3: 10
+
+class:
+    person:
+        name: zpw
+        age: 23
+        sex: true
+    map:
+        zpw01:
+           name: zpw01
+           age: 22
+           sex: false
+        zpw02:
+           name: zpw02
+           age: 21
+           sex: true

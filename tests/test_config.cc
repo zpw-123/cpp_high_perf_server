@@ -2,11 +2,15 @@
 #include "../src/config.h"
 #include "yaml-cpp/yaml.h"
 #include <cstddef>
+#include <sstream>
 #include <string>
 
 //上面实现的是简单类型的配置信息，比如int float等等；但是还有一些自定义类型
 cpp_high_perf::ConfigVar<int>::ptr g_int_value_config = 
     cpp_high_perf::Config::lookup("system.port", (int)8080, "system port");//只有这个才往map里面放数据
+
+// cpp_high_perf::ConfigVar<float>::ptr g_int_valuex_config = 
+//     cpp_high_perf::Config::lookup("system.port", (float)8080, "system port");//只有这个才往map里面放数据
 
 cpp_high_perf::ConfigVar<std::vector<int> >::ptr g_int_vec_value_config = 
     cpp_high_perf::Config::lookup("system.int_vec", std::vector<int>{1, 2}, "system int vec");
@@ -55,6 +59,7 @@ void test_yaml() {
 
 void test_config() {
     CHPE_LOG_INFO(CHPE_LOG_ROOT()) << "before: " << g_int_value_config->getValue();
+    //CHPE_LOG_INFO(CHPE_LOG_ROOT()) << "before: " << g_int_valuex_config->getValue();
 
 #define XX(g_var, name, prefix) \
     { \
@@ -94,10 +99,87 @@ void test_config() {
     XX_M(g_str_int_umap_value_config, str_int_umap, after);
 }
 
+class Person {
+public:
+    std::string m_name = "";
+    int m_age = 0;
+    bool m_sex = 0;
+
+    std::string toString() const {
+        std::stringstream ss;
+        ss << "ccc Person name = "<<m_name
+           << "age = "<<m_age
+           << "sex = "<<m_sex
+           << " !";
+        return ss.str();
+    }
+};
+
+//不可能给编译通过，所以在需要模板偏特化
+namespace cpp_high_perf {
+//person和string直接转化
+template <>
+class LexicalCast<std::string, Person> {
+public:
+    Person operator()(const std::string& str) {
+        YAML::Node node  = YAML::Load(str);
+        Person p;
+        p.m_name = node["name"].as<std::string>();
+        p.m_age = node["age"].as<int>();
+        p.m_sex = node["sex"].as<bool>();
+        return p;
+    }
+};
+
+template <>
+class LexicalCast<Person, std::string> {
+public:
+    std::string operator()(const Person& v) {
+        YAML::Node node;
+        node["name"] = v.m_name;
+        node["age"] = v.m_age;
+        node["sex"] = v.m_sex;
+
+        std::stringstream ss;
+        ss << node;
+        return ss.str();
+    }
+}; 
+}
+
+cpp_high_perf::ConfigVar<Person>::ptr g_persopn = 
+    cpp_high_perf::Config::lookup("class.person", Person(), "class.person");
+
+cpp_high_perf::ConfigVar<std::map<std::string, Person> >::ptr g_person_map = 
+    cpp_high_perf::Config::lookup("class.map", std::map<std::string, Person>(), "class.map");
+
+void test_class() {
+    CHPE_LOG_INFO(CHPE_LOG_ROOT()) << "before: " << g_persopn->getValue().toString() << " - " << g_persopn->toString();
+
+#define XX_PM(g_var, prefix) \
+    { \
+        auto m = g_person_map->getValue(); \
+        for(auto& i : m) { \
+            CHPE_LOG_INFO(CHPE_LOG_ROOT()) <<  prefix << ": " << i.first << " - " << i.second.toString(); \
+        } \
+        CHPE_LOG_INFO(CHPE_LOG_ROOT()) <<  prefix << ": size=" << m.size(); \
+    }
+
+    XX_PM(g_person_map, "class map before");
+
+    YAML::Node root = YAML::LoadFile("/home/zpw/cpp_high_perf_server/conf/log.yaml");
+    cpp_high_perf::Config::loadFromYaml(root);
+
+    CHPE_LOG_INFO(CHPE_LOG_ROOT()) << "after: " << g_persopn->getValue().toString() << " - " << g_persopn->toString();
+    XX_PM(g_person_map, "class map after");
+}
+
 int main(int argc, char** argv) {
     //test_yaml();
-    test_config();
+    //test_config();
 
     //test_yaml();
+
+    test_class();
     return 0;
 }

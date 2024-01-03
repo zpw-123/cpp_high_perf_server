@@ -35,6 +35,7 @@ public:
 
     virtual std::string toString() = 0;//方便调试 / 输出文件
     virtual bool fromString(const std::string& val) = 0;//解析配置文件
+    virtual std::string getTypeName() const = 0;
 
 private:
     std::string m_name;
@@ -277,7 +278,7 @@ public:
 
     const T getValue() const { return m_val; }
     void setValue(const T& v) { m_val = v; }
-
+    std::string getTypeName() const override { return typeid(T).name(); }
 private:
     T m_val;//配置文件里面要写入的值，类型很多(int, string等等)
 };
@@ -288,14 +289,26 @@ public:
     typedef std::map<std::string, cpp_high_perf::ConfigVarBase::ptr> ConfigVarMap;
     
     //一个是创建
+    //存在一个什么问题呢，就是如果没有找到，1）可能真的没有；2）可能只是类型不一样key相同，value类型不同的情况
     template<class T>
     static typename ConfigVar<T>::ptr lookup(const std::string& name, 
         const T& default_valse, const std::string& description = "") {
-            //先看能不能找得到
-            auto it = lookup<T>(name);
-            if (it != nullptr) {
-                CHPE_LOG_INFO(CHPE_LOG_ROOT()) << "Lookup name=" << name << " exists";
-                return it;
+            //先看看能不能找到
+            auto it = s_datas.find(name);
+            if (it != s_datas.end()) {
+                //表示有，转成我们对应的目标类型
+                auto tmp = std::dynamic_pointer_cast<ConfigVar<T>>(it->second);
+                if (tmp) {
+                    //表示转化成功
+                    CHPE_LOG_INFO(CHPE_LOG_ROOT()) << "Lookup name=" << name << " exists";
+                    return tmp;
+                } else {
+                    //直接报错
+                    CHPE_LOG_ERROR(CHPE_LOG_ROOT()) << "Lookup name=" << name << " exists but type not "
+                        << typeid(T).name() << "real type =" << it->second->getTypeName()
+                        << " " << it->second->toString();
+                    return nullptr;
+                }
             }
 
             //创建之前先判断字符串是否合理，是否有下面这些字符之外的，有就是不合理
